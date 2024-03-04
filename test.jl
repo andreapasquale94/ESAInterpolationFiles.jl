@@ -55,20 +55,20 @@ end
     return @views cache.buff[1:cols]
 end
 
+# find block
 bid = Ipf.find_block(f, 7336.5)
 b = f.blocks[bid]
-
 rid = Ipf.find_record(f, b, 7336.5)
-
 records = get_records(f, bid)
-subset = records[rid-(order÷2):rid+(order+1)÷2]
 
-order = 11
+# create cache
+order = 3
+subset = @views records[rid-(order÷2):rid+(order+1)÷2]
 c = Cache{Float64}(order+1, 6)
-
 for i in eachindex(subset)
     c.x[i] = subset[i][1]
     @views c.y[i] .= subset[i][2:7]
 end
 
+# eval
 lagrange(c, order, 6, 7336.5)
