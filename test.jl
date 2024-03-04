@@ -35,7 +35,7 @@ struct Cache{T}
     end
 end
 
-function lagrange(cache::Cache{T}, order, cols, x) where T
+@inbounds function lagrange(cache::Cache{T}, order, cols, x) where T
     n = order+1
 
     # Reset cache

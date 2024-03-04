@@ -1,4 +1,4 @@
-export IPF
+export IPF, find_block, get_record, get_record!, find_record, get_records
 
 struct IPF
     filepath::String
@@ -80,6 +80,30 @@ function get_record!(cache::AbstractVector, file::IPF, bid::Integer, rid::Intege
     nothing
 end
 
+function get_record(file::IPF, bid::Integer, rid::Integer)
+    dim = file.header.record_size ÷ 8 
+    cache = zeros(Float64, dim)
+    get_record!(cache, file, bid, rid)
+    return cache
+end
+
+function get_records(file::IPF, block::IPFBlockInfo)
+    records = Vector{Vector{Float64}}()
+    for i in 1:block.n_records
+        offset = block.offset + file.header.block_header_size*4 + (i-1)*file.header.record_size
+        push!(
+            records, 
+            reinterpret(Float64, file.array[offset+1 : offset+file.header.record_size])
+        )
+    end
+    return records
+end
+
+function get_records(file::IPF, bid::Integer)
+    block = file.blocks[bid]
+    return get_records(file, block)
+end
+
 function find_record(file::IPF, block::IPFBlockInfo, key::Number)
     # binary search to find the closest record 
     lo = 1 
@@ -96,6 +120,11 @@ function find_record(file::IPF, block::IPFBlockInfo, key::Number)
         end
     end
     return lo-1
+end
+
+function find_record(file::IPF, bid::Integer, key::Number)
+    block = file.blocks[bid]
+    return find_record(file, block, key)
 end
 
 function get_block_maxsize(file::IPF)
