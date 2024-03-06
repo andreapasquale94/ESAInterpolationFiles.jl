@@ -26,9 +26,6 @@ function compute(file::IPFFile, e::Number)
     # Number of points/interpolation order
     points = right - left
     order = points - 1
-    @show left 
-    @show right
-    @show points 
 
     get_records!(cache.y, file, block, left, points)
 
