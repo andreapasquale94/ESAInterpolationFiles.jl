@@ -1,16 +1,18 @@
-export IPF, find_block, get_record, get_record!, find_record, get_records
+export IPFFile, find_block, get_record, get_record!, find_record, get_records
 
-struct IPF
+struct IPFFile
     filepath::String
     header::IPFHeader
     blocks::Vector{IPFBlockInfo}
     first_key::Float64 
     last_key::Float64
     array::Vector{UInt8}
+    cache::InterpCache{Float64}
 end
 
-function IPF(filepath::String)
+function IPFFile(filepath::String)
     array = Mmap.mmap(filepath)
+
     # Construct header
     header = IPFHeader(array)
 
@@ -21,8 +23,14 @@ function IPF(filepath::String)
     # Build blocks info
     blocks = blocks_info(array, header.tail_offset, header)
 
+    cache = InterpCache{Float64}(
+        header.user_header[2]+1, 
+        header.n_columns*(1 + header.n_derivatives) + 1, 
+        header.n_derivatives > 0 ? 2 : 1
+    )
+
     # Create Ipf file
-    return IPF(filepath, header, blocks, first_key, last_key, array)
+    return IPFFile(filepath, header, blocks, first_key, last_key, array, cache)
 end
 
 function blocks_info(array::Vector{UInt8}, offset, header)
@@ -36,8 +44,8 @@ function blocks_info(array::Vector{UInt8}, offset, header)
     return blocks
 end
 
-function Base.show(io::IO, f::IPF)
-    print(io, "IPF(")
+function Base.show(io::IO, f::IPFFile)
+    print(io, "IPFFile(")
     print(io, "file='$(f.filepath)', ")
     print(io, "n_blocks=$(f.header.n_blocks), ")
     print(io, "first_key=$(f.first_key), ")
@@ -45,7 +53,7 @@ function Base.show(io::IO, f::IPF)
     print(io, ")")
 end
 
-function find_block(file::IPF, key::Number)
+function find_block(file::IPFFile, key::Number)
     # binary search to find the block that contains the key inside
     lo = 1
     hi = length(file.blocks)
@@ -65,7 +73,7 @@ function find_block(file::IPF, key::Number)
     throw(ErrorException("Cannot find block that contains key = $(key)."))
 end
 
-function get_record!(cache::AbstractVector, file::IPF, bid::Integer, rid::Integer)
+function get_record!(cache::AbstractVector, file::IPFFile, bid::Integer, rid::Integer)
     block = file.blocks[bid]
     # Offset to record start 
     # this include the block offset, the block header size and the previous records size
@@ -80,14 +88,37 @@ function get_record!(cache::AbstractVector, file::IPF, bid::Integer, rid::Intege
     nothing
 end
 
-function get_record(file::IPF, bid::Integer, rid::Integer)
+function get_record(file::IPFFile, bid::Integer, rid::Integer)
     dim = file.header.record_size ÷ 8 
     cache = zeros(Float64, dim)
     get_record!(cache, file, bid, rid)
     return cache
 end
 
-function get_records(file::IPF, block::IPFBlockInfo)
+function get_records!(out, file::IPFFile, b::IPFBlockInfo, first::Int, count::Int)
+    # Find offset of the first element
+    offset = b.offset + file.header.block_header_size*4 
+    offset += (first-1)*file.header.record_size
+
+    # Dimension of the record (in Float64) 
+    dim = file.header.record_size ÷ 8 
+    for i in 1:count
+        k = offset +  (i-1)*file.header.record_size
+        for j in 1:dim 
+            out[i][j] = get_float(
+                file.array, k+(j-1)*8, file.header.bigend
+            )
+        end
+    end
+    nothing
+end
+
+function get_records!(out, file::IPFFile, bid::Int, first::Int, count::Int)
+    get_records!(out, file, file.blocks[bid], first, count)
+    nothing
+end
+
+function get_records(file::IPFFile, block::IPFBlockInfo)
     records = Vector{Vector{Float64}}()
     for i in 1:block.n_records
         offset = block.offset + file.header.block_header_size*4 + (i-1)*file.header.record_size
@@ -99,12 +130,12 @@ function get_records(file::IPF, block::IPFBlockInfo)
     return records
 end
 
-function get_records(file::IPF, bid::Integer)
+function get_records(file::IPFFile, bid::Integer)
     block = file.blocks[bid]
     return get_records(file, block)
 end
 
-function find_record(file::IPF, block::IPFBlockInfo, key::Number)
+function find_record(file::IPFFile, block::IPFBlockInfo, key::Number)
     # binary search to find the closest record 
     lo = 1 
     hi = block.n_records
@@ -122,12 +153,12 @@ function find_record(file::IPF, block::IPFBlockInfo, key::Number)
     return lo-1
 end
 
-function find_record(file::IPF, bid::Integer, key::Number)
+function find_record(file::IPFFile, bid::Integer, key::Number)
     block = file.blocks[bid]
     return find_record(file, block, key)
 end
 
-function get_block_maxsize(file::IPF)
+function get_block_maxsize(file::IPFFile)
     maxs = 0
     for b in file.blocks
         b.n_records > maxs ? maxs = b.n_records : nothing 

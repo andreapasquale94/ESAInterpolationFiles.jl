@@ -5,6 +5,7 @@ version = "1.0.0"
 
 [deps]
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
+PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
