@@ -1,15 +1,15 @@
 export compute
 
-function compute(file::IPFFile, e::Number)
+function compute(file::IPF, e::Number)
+    return compute(file, get_block(file, e), e)
+end
+
+function compute(file::IPF, block::IPFBlockInfo, e::Number)
     header = file.header
     cache = file.cache
 
     # Get maximum order 
     order = header.user_header[2]
-
-    # Find block & records
-    bid = find_block(file, e)
-    block = file.blocks[bid]
     n_records = block.n_records
 
     # Find record
