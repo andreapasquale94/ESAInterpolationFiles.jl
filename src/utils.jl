@@ -25,7 +25,3 @@ function get_float(array, address::Integer, bend::Bool)
     ptr = unsafe_load(Ptr{Float64}(pointer(array, address+1)))
     get_num(ptr, bend)
 end
-
-@inline @views function get_record(array, index::Integer, length::Integer)
-    @inbounds return array[1+length*(index-1):length*index]
-end

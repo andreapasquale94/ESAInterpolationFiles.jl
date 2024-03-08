@@ -1,9 +1,23 @@
 export compute
 
+"""
+    compute(file::IPF, key::Number)
+
+Compute Interpolation File value at the given `key` value.
+"""
 function compute(file::IPF, key::Number)
     return compute(file, get_block(file, key), key)
 end
 
+"""
+    compute_derivative(file::IPF, key::Number)
+
+Compute Interpolation File derivative value at the given `key` value.
+
+!!! warning
+
+    To use this function the `IPF` file shall contains derivatives.
+"""
 function compute_derivative(file::IPF, key::Number)
     return compute_derivative(file, get_block(file, key), key)
 end
