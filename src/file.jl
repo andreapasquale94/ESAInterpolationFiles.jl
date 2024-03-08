@@ -1,16 +1,16 @@
 export IPF, get_block, get_record, get_records
 
-struct IPF
+struct IPF{cType, vType}
     filepath::String
     header::IPFHeader
     blocks::Vector{IPFBlockInfo}
-    first_key::Float64 
-    last_key::Float64
+    first_key::vType 
+    last_key::vType
     array::Vector{UInt8}
-    cache::InterpCache{Float64}
+    cache::InterpCache{cType, vType}
 end
 
-function IPF(filepath::String)
+function IPF{cType, vType}(filepath::String) where {cType, vType}
     array = Mmap.mmap(filepath)
 
     # Construct header
@@ -23,14 +23,18 @@ function IPF(filepath::String)
     # Build blocks info
     blocks = blocks_info(array, header.tail_offset, header)
 
-    cache = InterpCache{Float64}(
+    cache = InterpCache{cType, vType}(
         header.user_header[2]+1, 
         header.n_columns*(1 + header.n_derivatives) + 1, 
         header.n_derivatives > 0 ? 2 : 1
     )
 
     # Create Ipf file
-    return IPF(filepath, header, blocks, first_key, last_key, array, cache)
+    return IPF{cType, vType}(filepath, header, blocks, first_key, last_key, array, cache)
+end
+
+function IPF(filepath::String)
+    return IPF{Float64, Float64}(filepath)
 end
 
 function blocks_info(array::Vector{UInt8}, offset, header)
@@ -70,7 +74,7 @@ function find_block(file::IPF, key::Number)
     end
 
     @label err 
-    throw(ErrorException("Cannot find block that contains key = $(key)."))
+    throw(ErrorException("Cannot find any block that contains key = $(key)."))
 end
 
 function get_block(file::IPF, key::Number)
@@ -100,16 +104,17 @@ function get_record(file::IPF, bid::Integer, rid::Integer)
     return cache
 end
 
-function get_records!(out, file::IPF, b::IPFBlockInfo, first::Int, count::Int)
+function get_records!(
+    out, file::IPF, b::IPFBlockInfo, first::Int, count::Int, 
+    maxdim::Int, initdim::Int = 1
+)
     # Find offset of the first element
     offset = b.offset + file.header.block_header_size*4 
     offset += (first-1)*file.header.record_size
-
-    # Dimension of the record (in Float64) 
-    dim = file.header.record_size ÷ 8 
+ 
     for i in 1:count
         k = offset + (i-1)*file.header.record_size
-        for j in 1:dim 
+        for j in initdim:maxdim 
             out[i][j] = get_float(
                 file.array, k+(j-1)*8, file.header.bigend
             )
