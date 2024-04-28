@@ -1,4 +1,4 @@
-module Ipf
+module IPFFiles
 
 using Mmap
 using PreallocationTools

@@ -1,4 +1,4 @@
-# Ipf.jl
+# IPFFiles.jl
 
 _ESA Interpolation Files made easy._
 
@@ -11,7 +11,7 @@ The `compute` and `compute_derivative` functions can be used to perform interpol
 ### Example Usage:
 
 ```julia
-using Ipf
+using IPFFiles: IPF, compute, compute_derivatives
 
 # Load an IPF file
 file = IPF("example.ipf")
