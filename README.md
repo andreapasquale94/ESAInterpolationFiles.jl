@@ -1,8 +1,8 @@
-# IPFFiles.jl
+# ESAInterpolationFiles.jl
 
 _ESA Interpolation Files made easy._
 
-Ipf.jl is a Julia library that provides fast and allocation-free access to binary ESA/ESOC interpolation files or IPF. Completely written in Julia, it enables Automatic-Differentiation (AD) via [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) and [TaylorSeries.jl](https://github.com/JuliaDiff/TaylorSeries.jl) across all of its function calls. 
+ESAInterpolationFiles.jl is a Julia library that provides fast and allocation-free access to binary ESA/ESOC interpolation files or IPF. Completely written in Julia, it enables Automatic-Differentiation (AD) via [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) and [TaylorSeries.jl](https://github.com/JuliaDiff/TaylorSeries.jl) across all of its function calls. 
 
 ## Usage
 
@@ -11,7 +11,7 @@ The `compute` and `compute_derivative` functions can be used to perform interpol
 ### Example Usage:
 
 ```julia
-using IPFFiles: IPF, compute, compute_derivatives
+using ESAInterpolationFiles: IPF, compute, compute_derivatives
 
 # Load an IPF file
 file = IPF("example.ipf")
