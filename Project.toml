@@ -1,12 +1,12 @@
-name = "IPFFiles"
+name = "ESAInterpolationFiles"
 uuid = "dfb2dbec-0384-47ba-b614-66be42e3cf9e"
 authors = ["Andrea Pasquale <andrea.pasquale@polimi.it>"]
 version = "0.1.0"
 
-[compat]
-julia = "1.0"
-PreallocationTools = "0.4"
-
 [deps]
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
+
+[compat]
+PreallocationTools = "0.4"
+julia = "1"

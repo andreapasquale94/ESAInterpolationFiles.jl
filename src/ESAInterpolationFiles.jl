@@ -1,4 +1,4 @@
-module IPFFiles
+module ESAInterpolationFiles
 
 using Mmap
 using PreallocationTools
