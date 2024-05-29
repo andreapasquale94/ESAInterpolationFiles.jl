@@ -1,7 +1,7 @@
 name = "ESAInterpolationFiles"
 uuid = "dfb2dbec-0384-47ba-b614-66be42e3cf9e"
 authors = ["Andrea Pasquale <andrea.pasquale@polimi.it>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
