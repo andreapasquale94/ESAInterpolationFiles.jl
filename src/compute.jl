@@ -1,4 +1,4 @@
-export compute
+export compute, compute_derivative
 
 """
     compute(file::IPF, key::Number)
@@ -47,7 +47,7 @@ function _update_cache!(file::IPF, block::IPFBlockInfo, key::Number)
 
     get_records!(
         cache.y, file, block, left, points,
-        header.n_columns + 1
+        header.n_columns * (1 + header.n_derivatives) + 1 
     )
     return header, cache, order
 end
@@ -65,11 +65,11 @@ function compute(file::IPF, block::IPFBlockInfo, key::Number)
 end
 
 function compute_derivative(file::IPF, block::IPFBlockInfo, key::Number)
+    header, cache, order = _update_cache!(file, block, key)
     if header.n_derivatives == 0
         throw(
             ErrorException("Cannot compute derivatives as they are not present!")
         )
     end
-    header, cache, order = _update_cache!(file, block, key)
-    return lagrange(cache, order, header.n_columns, key, header.n_columns)
+    return lagrange(cache, order, header.n_columns, key, header.n_columns+1)
 end
